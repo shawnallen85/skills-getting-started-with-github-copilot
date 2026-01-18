@@ -27,6 +27,57 @@ document.addEventListener("DOMContentLoaded", () => {
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
         `;
 
+        // Participants section
+        const participantsSection = document.createElement("div");
+        participantsSection.className = "participants-section";
+
+        const participantsTitle = document.createElement("h5");
+        participantsTitle.textContent = "Participants";
+        participantsSection.appendChild(participantsTitle);
+
+        const participantsList = document.createElement("ul");
+        participantsList.className = "participants-list";
+
+        if (details.participants && details.participants.length > 0) {
+          details.participants.forEach((email, idx) => {
+            const div = document.createElement('div');
+            div.className = 'participant-row';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = email;
+            div.appendChild(nameSpan);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '&#128465;'; // Trash icon
+            deleteBtn.title = 'Remove participant';
+            deleteBtn.onclick = () => unregisterParticipant(name, email);
+            div.appendChild(deleteBtn);
+            participantsList.appendChild(div);
+          });
+        } else {
+          const div = document.createElement('div');
+          div.textContent = "No participants yet";
+          div.style.fontStyle = "italic";
+          participantsList.appendChild(div);
+        }
+  // Unregister participant from activity
+  async function unregisterParticipant(activityName, email) {
+    try {
+      const response = await fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        fetchActivities();
+      } else {
+        alert('Failed to remove participant.');
+      }
+    } catch (error) {
+      alert('Error removing participant.');
+    }
+  }
+
+        participantsSection.appendChild(participantsList);
+        activityCard.appendChild(participantsSection);
+
         activitiesList.appendChild(activityCard);
 
         // Add option to select dropdown
@@ -62,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
