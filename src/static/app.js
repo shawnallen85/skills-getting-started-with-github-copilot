@@ -39,17 +39,41 @@ document.addEventListener("DOMContentLoaded", () => {
         participantsList.className = "participants-list";
 
         if (details.participants && details.participants.length > 0) {
-          details.participants.forEach((email) => {
-            const li = document.createElement("li");
-            li.textContent = email;
-            participantsList.appendChild(li);
+          details.participants.forEach((email, idx) => {
+            const div = document.createElement('div');
+            div.className = 'participant-row';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = email;
+            div.appendChild(nameSpan);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '&#128465;'; // Trash icon
+            deleteBtn.title = 'Remove participant';
+            deleteBtn.onclick = () => unregisterParticipant(name, email);
+            div.appendChild(deleteBtn);
+            participantsList.appendChild(div);
           });
         } else {
-          const li = document.createElement("li");
-          li.textContent = "No participants yet";
-          li.style.fontStyle = "italic";
-          participantsList.appendChild(li);
+          const div = document.createElement('div');
+          div.textContent = "No participants yet";
+          div.style.fontStyle = "italic";
+          participantsList.appendChild(div);
         }
+  // Unregister participant from activity
+  async function unregisterParticipant(activityName, email) {
+    try {
+      const response = await fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        fetchActivities();
+      } else {
+        alert('Failed to remove participant.');
+      }
+    } catch (error) {
+      alert('Error removing participant.');
+    }
+  }
 
         participantsSection.appendChild(participantsList);
         activityCard.appendChild(participantsSection);
@@ -89,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
